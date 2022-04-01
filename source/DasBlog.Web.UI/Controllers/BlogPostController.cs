@@ -172,20 +172,21 @@ namespace DasBlog.Web.Controllers
 			ValidatePostName(post);
 			if (!ModelState.IsValid)
 			{
-				return View(post);
+				return LocalRedirect(string.Format("/post/{0}/edit", post.EntryId));
 			}
 
 			if (!string.IsNullOrWhiteSpace(post.NewCategory))
 			{
 				ModelState.AddModelError(nameof(post.NewCategory), 
 					$"Please click 'Add' to add the category, \"{post.NewCategory}\" or clear the text before continuing");
-				return View(post);
+				return LocalRedirect(string.Format("/post/{0}/edit", post.EntryId));
 			}
 			try
 			{
 				var entry = mapper.Map<NBR.Entry>(post);
 				entry.Author = httpContextAccessor.HttpContext.User.Identity.Name;
 				entry.Language = "en-us"; //TODO: We inject this fron http context?
+				entry.ModifiedUtc = DateTime.UtcNow;
 				entry.Latitude = null;
 				entry.Longitude = null;
 
@@ -195,7 +196,7 @@ namespace DasBlog.Web.Controllers
 				if (sts == NBR.EntrySaveState.Failed)
 				{
 					ModelState.AddModelError("", "Failed to edit blog post. Please check Logs for more details.");
-					return View(post);
+					return LocalRedirect(string.Format("/post/{0}/edit", post.EntryId));
 				}
 
 			}
@@ -205,7 +206,7 @@ namespace DasBlog.Web.Controllers
 				ModelState.AddModelError("", "Failed to edit blog post. Please check Logs for more details.");
 			}
 
-			return View(post);
+			return LocalRedirect(string.Format("/post/{0}/edit", post.EntryId));
 		}
 
 		[HttpGet("post/create")]
@@ -276,7 +277,7 @@ namespace DasBlog.Web.Controllers
 
 			BreakSiteCache();
 
-			return View("views/blogpost/editPost.cshtml", post);
+			return LocalRedirect(string.Format("/post/{0}/edit", entry.EntryId));
 		}
 
 		[HttpGet("post/{postid:guid}/delete")]
